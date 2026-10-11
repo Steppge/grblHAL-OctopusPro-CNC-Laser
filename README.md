@@ -65,6 +65,9 @@ RST is not connected. While the ESP32 is on the PC USB, leave the 5V wire open.
 
 Every axis has its own control, so a slightly diagonal stick never moves a second axis. "Hold" = 0.6 s.
 
+These are the default buttons. They can be reassigned with `$450`-`$457` or on the display (Settings →
+Gamepad → Change, then press the new button; Defaults (hold) restores them). Feed hold / STOP always keeps a button.
+
 **Light bar and rumble**
 
 | State | Light bar |
