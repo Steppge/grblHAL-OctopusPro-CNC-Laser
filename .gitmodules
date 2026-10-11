@@ -55,3 +55,6 @@
 [submodule "gamepad"]
 	path = gamepad
 	url = https://github.com/Steppge/grblHAL-Plugin-Gamepad
+[submodule "display"]
+	path = display
+	url = https://github.com/Steppge/grblHAL-Plugin-Display
