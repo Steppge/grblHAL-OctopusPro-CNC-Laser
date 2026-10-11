@@ -105,7 +105,22 @@ Disabled by default (`JOYSTICK_ANALOG_ENABLE 0`), kept for the analog sticks of 
 - The stepper driver fan on FAN2 runs while the drivers are enabled, like Marlin's `USE_CONTROLLER_FAN`.
 - `$1=60000`: after the last move the drivers stay enabled for 60 s with the hold current (`$210`-`$212`), then drivers and fan switch off.
 
-### Touch display – [`Src/tft_display.c`](Src/tft_display.c)
+### Touch display – plugin [Steppge/grblHAL-Plugin-Display](https://github.com/Steppge/grblHAL-Plugin-Display)
+The MKS TS35 is driven by an **ESP32-S3** (N16R8) that talks to the Octopus over USART2 (PD5 TX2 / PD6 RX2 header next to the USB-C socket). Included as submodule in [`display/`](display/) and added to `lib_deps` of the `octopus_pro_f446` environment.
+
+```c
+#define TFT_DISPLAY_ENABLE      0 // TS35 driven by the Octopus itself (see below)
+#define DISPLAY_LINK_ENABLE     1 // ESP32-S3 touch display on USART2
+```
+
+- Main screen with state, position, feed, power and a map of the machine area: live tool path while the laser is on, and a **preview of the G-code file** loaded from the SD card (computed by the plugin on the Octopus while idle). Buttons change between idle (home, unlock, X0 Y0, Z0, hold, load/start) and job (feed and power overrides, hold/stop, resume).
+- Zoom view of the workpiece with STOP (feed hold, laser off, then ABORT).
+- Menu: Move, Probe Z, laser test pulse, SD card, settings editor (all `$` settings, with keypad), unlock.
+- Errors of commands and SD jobs appear in a banner; after an SD job has stopped with an error the display offers the reset grblHAL needs before jogging again.
+- Wiring, build and the lessons from the bring-up: see the [plugin README](https://github.com/Steppge/grblHAL-Plugin-Display#readme).
+
+### Touch display on the Octopus (previous version) – [`Src/tft_display.c`](Src/tft_display.c)
+Selected with `TFT_DISPLAY_ENABLE 1` (and `DISPLAY_LINK_ENABLE 0`), the TS35 is then connected to EXP1/EXP2 of the Octopus.
 MKS TS35-R V2.0 (ST7796 480x320, XPT2046 touch) on EXP1/EXP2:
 - Main screen with state, work/machine position, SD job progress, feed rate and WCS; buttons for menu, home, unlock, zeroing, hold and start. The start button shows LOAD while no file is selected. The unlock button shows RESET while a hard limit alarm waits for a reset and is greyed out while a limit switch is engaged (strict mode). With homing required after power-up (`$22=591`) it shows HOLD 3S: holding it unlocks without homing (no soft limits then).
 - Short alarm names in the status field and override buttons while a job runs, see the tables below.
@@ -164,7 +179,7 @@ Overrides other than 100 % are shown at the end of the info line, e.g. `logo.nc 
    Also check the other options in `my_machine.h` (motor currents, ganged Y axis, laser, ...). If you don't have the gamepad/joystick, display and controller fan, remove `-D ADD_MY_PLUGIN=1` from the `octopus_pro_f446` environment in `platformio.ini`.
 4. Build the environment **`octopus_pro_f446`** (linker script `STM32F446ZETX_BL32K_NONVS_FLASH.ld`, 32K bootloader offset).
 5. Copy `.pio/build/octopus_pro_f446/firmware.bin` as `firmware.bin` to the SD card and power up the board.
-   Or over USB (machine idle, no sender connected, needs `SDCARD_ENABLE 2` and pyserial): `python tools/upload_firmware.py --reboot` uploads the file to the SD card in the board with YModem and reboots, the bootloader then flashes it.
+   Or over USB (machine idle, no sender connected, needs `SDCARD_ENABLE 2` and pyserial): `python tools/upload_firmware.py --reboot` uploads the file to the SD card in the board with YModem and reboots, the bootloader then flashes it. `--alarm-ok` also uploads in alarm state (e.g. homing required after power-up, nothing moves), `--target <name>` copies other files, e.g. G-code: `python tools/upload_firmware.py --file job.nc --target job.nc`.
 
 ## Troubleshooting: grblHAL on the BTT Octopus Pro
 
@@ -187,6 +202,12 @@ Problems hit while moving this machine from Marlin to grblHAL, with the solution
 **Axis drives through an engaged limit switch into the mechanical stop**
 - Hard limits only trigger on the change from released to engaged. A sender like LightBurn sends a reset right after `ALARM:1`; when the machine was standing still the position is not lost and grblHAL returns to Idle while the switch is still engaged. The next move towards the switch then gets no new trigger.
 - Fix: `$21=3` (hard limits + strict mode). With a limit switch engaged after a reset grblHAL raises `ALARM:12`, refuses `$X` and only allows homing. Soft limits (`$20=1`) protect both ends once the machine is homed.
+
+**Commands from the display or gamepad stall after a program on the PC has closed the USB port**
+- While DTR is set grblHAL treats the USB port as connected and waits for the PC to read its replies. A program that closes the port without dropping DTR leaves the controller waiting, commands from other streams (display, gamepad) are not executed until the next reboot or until a program opens the port again. `tools/upload_firmware.py` drops DTR before closing.
+
+**SD job stops at once with `error:75`**
+- This build has `NGC_EXPRESSIONS_ENABLE`: text in `[...]` or with `#` is evaluated as an expression. Remove such lines from the G-code. After a job has stopped with an error grblHAL refuses jogs until a reset.
 
 **Board does not start after flashing from SD card**
 - The firmware must be linked for the 32K bootloader offset. Use the PlatformIO environment `octopus_pro_f446` (`STM32F446ZETX_BL32K_NONVS_FLASH.ld`, `HAS_BOOTLOADER=1`, `HSE_VALUE=12000000`) and copy the file as `firmware.bin` to the SD card.
