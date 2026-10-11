@@ -117,6 +117,7 @@ The MKS TS35 is driven by an **ESP32-S3** (N16R8) that talks to the Octopus over
 - Zoom view of the workpiece with STOP (feed hold, laser off, then ABORT).
 - Menu: Move, Probe Z, laser test pulse, SD card, settings editor (all `$` settings, with keypad), unlock.
 - Errors of commands and SD jobs appear in a banner; after an SD job has stopped with an error the display offers the reset grblHAL needs before jogging again.
+- WiFi: firmware updates of the display over the air, and **LightBurn over WiFi** (TCP port 23 on the display, passed through to USART3 on the WIFI socket, which becomes the active grblHAL stream while connected).
 - Wiring, build and the lessons from the bring-up: see the [plugin README](https://github.com/Steppge/grblHAL-Plugin-Display#readme).
 
 ### Touch display on the Octopus (previous version) – [`Src/tft_display.c`](Src/tft_display.c)
