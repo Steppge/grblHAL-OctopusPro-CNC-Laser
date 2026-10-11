@@ -179,6 +179,13 @@ def main():
         close_port(ser)
         sys.exit(f'Machine is not idle ({st or "no status"}), nothing done.')
 
+    # Realtime commands like ? work on every stream, command lines only on the active one. While another
+    # stream is active (e.g. a sender connected over WiFi) the board does not execute anything sent over USB.
+    if not any(l == 'ok' for l in command(ser, '$G', 2)):
+        close_port(ser)
+        sys.exit('The board does not accept commands over USB, another stream is active '
+                 '(a sender connected over WiFi?). Disconnect it and try again, nothing done.')
+
     if not args.reboot_only:
         if not os.path.isfile(args.file):
             sys.exit(f'{args.file} not found.')
