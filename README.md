@@ -24,7 +24,7 @@ The working branch is **`octopus-pro-joy`** (default branch). `master` tracks up
 - Controls: reset (TB, PF3) and feed hold (T0, PF4), probe on Z2-STOP (PG11).
 
 ### Startup fix in `Src/main.c`
-The BTT bootloader leaves the system clock running from the PLL. Upstream only switched back to HSI before the PLL setup for `BOARD_BTT_OCTOPUS_PRO`, so any other board define (e.g. `BOARD_MY_MACHINE`) hung at startup without USB. The switch now depends on the actual clock source instead of the board define. Submitted upstream as [grblHAL/STM32F4xx#307](https://github.com/grblHAL/STM32F4xx/pull/307).
+The BTT bootloader leaves the system clock running from the PLL. Upstream only switched back to HSI before the PLL setup for `BOARD_BTT_OCTOPUS_PRO`, so any other board define (e.g. `BOARD_MY_MACHINE`) hung at startup without USB. The switch now depends on the actual clock source instead of the board define. Merged upstream with [grblHAL/STM32F4xx#307](https://github.com/grblHAL/STM32F4xx/pull/307) (2026-10-11), grblHAL `master` from then on includes it.
 
 ### Jogging device
 Selected in [`Inc/my_machine.h`](Inc/my_machine.h), enable only one:
@@ -187,7 +187,7 @@ Problems hit while moving this machine from Marlin to grblHAL, with the solution
 
 **No USB / board seems dead after flashing a build with `BOARD_MY_MACHINE` (or a custom board map)**
 - The BTT bootloader leaves the system clock running from the PLL. Upstream grblHAL only switches back to HSI before the PLL setup when `BOARD_BTT_OCTOPUS_PRO` is defined. With any other board define `HAL_RCC_OscConfig()` fails, the firmware ends in `Error_Handler()` and hangs before USB comes up.
-- Fix: the change in `Src/main.c` from this repository, submitted upstream as [grblHAL/STM32F4xx#307](https://github.com/grblHAL/STM32F4xx/pull/307).
+- Fix: the change in `Src/main.c`, merged upstream with [grblHAL/STM32F4xx#307](https://github.com/grblHAL/STM32F4xx/pull/307) on 2026-10-11. Current grblHAL `master` contains it, older versions need the change from this repository.
 - Workaround without the fix: keep `BOARD_BTT_OCTOPUS_PRO` and put your pins into `boards/btt_octopus_pro_map.h`.
 
 **`my_machine_map.h` only works after renaming it to `btt_octopus_pro_map.h`**
