@@ -178,6 +178,9 @@
 //#define JOYSTICK_PORT_X         0 // analog aux input ports of the sticks, default 0, 1, 2
 #define GAMEPAD_ENABLE          1 // PS4/PS5/Xbox controller via ESP32 on the TFT header (USART1), see gamepad_plugin.c
 //#define GAMEPAD_STREAM          0 // serial stream instance for the ESP32, default 0 (Octopus Pro: TFT header)
+#define TFT_DISPLAY_ENABLE      0 // MKS TS35 on EXP1/EXP2 driven by the Octopus, see tft_display.c
+#define DISPLAY_LINK_ENABLE     1 // ESP32-S3 touch display on USART2 (PD5 TX2 / PD6 RX2 header next to USB-C), see display/display_link.c
+//#define DISPLAY_LINK_STREAM     1 // serial stream instance for the ESP32-S3, default 1 (Octopus Pro: USART2, 2 = USART3 on the WIFI socket)
 /**/
 // If the selected board map supports more than three motors ganging and/or auto-squaring
 // of axes can be enabled here.

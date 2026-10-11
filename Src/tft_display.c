@@ -49,6 +49,8 @@
 
 #include "driver.h"
 
+#if TFT_DISPLAY_ENABLE
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -2758,3 +2760,5 @@ void tft_display_init (void)
 
     system_register_commands(&tft_commands);
 }
+
+#endif // TFT_DISPLAY_ENABLE

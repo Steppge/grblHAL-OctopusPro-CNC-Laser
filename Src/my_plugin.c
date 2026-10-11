@@ -14,6 +14,7 @@
 extern void joystick_init (void);
 extern void gamepad_init (void);
 extern void tft_display_init (void);
+extern void display_link_init (void);
 extern void controller_fan_init (void);
 
 void my_plugin_init (void)
@@ -24,6 +25,11 @@ void my_plugin_init (void)
 #if GAMEPAD_ENABLE
     gamepad_init();         // Bluetooth gamepad via ESP32, see gamepad_plugin.c
 #endif
+#if TFT_DISPLAY_ENABLE
     tft_display_init();     // MKS TS35 status display, see tft_display.c
+#endif
+#if DISPLAY_LINK_ENABLE
+    display_link_init();    // ESP32-S3 touch display, see display/display_link.c
+#endif
     controller_fan_init();  // stepper driver cooling fan on FAN2, see controller_fan.c
 }

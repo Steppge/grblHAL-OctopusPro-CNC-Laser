@@ -142,7 +142,7 @@ def reboot(ser):
         ser.write(b'$REBOOT\n')
         time.sleep(0.5)
     finally:
-        ser.close()
+        close_port(ser)
     time.sleep(5)
     ser = open_port(timeout_s=40)
     time.sleep(1)
@@ -150,21 +150,33 @@ def reboot(ser):
     print('Board is back:')
     for line in info:
         print('  ' + line)
+    close_port(ser)
+
+
+def close_port(ser):
+    # Drop DTR before closing: grblHAL treats the USB port as connected while DTR is set and
+    # waits for the host to read its replies, commands from other streams then stall.
+    ser.dtr = False
+    time.sleep(0.05)
     ser.close()
 
 
 def main():
+    global TARGET
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--reboot', action='store_true', help='reboot after the upload to flash the firmware')
     ap.add_argument('--reboot-only', action='store_true', help='only reboot (file already on the card)')
     ap.add_argument('--file', default=FIRMWARE, help='firmware file (default: PlatformIO build output)')
+    ap.add_argument('--target', default=TARGET, help='file name on the card (default: firmware.bin), e.g. for G-code files')
+    ap.add_argument('--alarm-ok', action='store_true', help='also upload in alarm state (nothing moves, only the SD card is written)')
     args = ap.parse_args()
+    TARGET = args.target.lower()
 
     ser = open_port()
     time.sleep(0.3)
     st = status(ser)
-    if not st.startswith('<Idle'):
-        ser.close()
+    if not (st.startswith('<Idle') or (args.alarm_ok and st.startswith('<Alarm'))):
+        close_port(ser)
         sys.exit(f'Machine is not idle ({st or "no status"}), nothing done.')
 
     if not args.reboot_only:
@@ -176,7 +188,7 @@ def main():
     if args.reboot or args.reboot_only:
         reboot(ser)
     else:
-        ser.close()
+        close_port(ser)
         print('Upload complete. Reboot the board (or run with --reboot-only) to flash it.')
 
 
