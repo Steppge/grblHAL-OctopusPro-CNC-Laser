@@ -42,8 +42,12 @@ ESP32-WROOM-32 running [Bluepad32](https://github.com/ricardoquesada/bluepad32).
 state every 20 ms over UART to the TFT header of the Octopus (USART1) and shows the machine state on the light bar.
 All machine logic is in the grblHAL plugin.
 
-**Wiring** (Octopus TFT header → ESP32 DevKit): 5V → VIN, GND → GND, TX → D16 (GPIO16), RX ← D17 (GPIO17).
+**Wiring** (Octopus TFT header → ESP32): 5V → VIN / VCC, GND → GND, TX → GPIO16, RX ← GPIO17.
 RST is not connected. While the ESP32 is on the PC USB, leave the 5V wire open.
+
+Tested and working: **ESP32 DevKit** (WROOM-32) and **D1 Mini ESP32** (WROOM-32, USB-C, CH9102F; IO17, IO16,
+GND and VCC are next to each other in its inner pin row). The D1 Mini has no BOOT button, its controller is
+paired from the display.
 
 **Controls**
 
@@ -88,9 +92,10 @@ two pulses when a job running at least 10 s has finished.
   disconnects, on an alarm, when a job starts and at power-up, and can only be switched on while the machine is
   idle and all sticks and triggers are at rest.
 - Releasing a stick or trigger stops the axis. No valid packet for 200 ms (cable, ESP32) stops everything.
-- The ESP32 accepts only controllers on its allow list (pairing: hold BOOT 3 s, then put the controller in
-  pairing mode; PS4: Share + PS). Packets carry a checksum.
-- `$I` shows the connection (`Gamepad v0.4 (connected, jog locked)`), the status report the received values
+- The ESP32 accepts only controllers on its allow list. Pairing: on the display Settings → Gamepad →
+  Pair controller (or hold BOOT 3 s on the ESP32), then put the controller in pairing mode (PS4: Share + PS).
+  Forget all (hold) on the display (or BOOT 10 s) clears the list. Packets carry a checksum.
+- `$I` shows the connection (`Gamepad v1.2 (connected, jog locked)`), the status report the received values
   (`|Pad:connected,enabled,rx,ly,l2,r2`).
 
 Building the ESP32 firmware: see [`gamepad/esp32/README.md`](https://github.com/Steppge/grblHAL-Plugin-Gamepad/blob/main/esp32/README.md).
@@ -109,16 +114,17 @@ Disabled by default (`JOYSTICK_ANALOG_ENABLE 0`), kept for the analog sticks of 
 - `$1=60000`: after the last move the drivers stay enabled for 60 s with the hold current (`$210`-`$212`), then drivers and fan switch off.
 
 ### Touch display – plugin [Steppge/grblHAL-Plugin-Display](https://github.com/Steppge/grblHAL-Plugin-Display)
-The MKS TS35 is driven by an **ESP32-S3** (N16R8) that talks to the Octopus over USART2 (PD5 TX2 / PD6 RX2 header next to the USB-C socket). Included as submodule in [`display/`](display/) and added to `lib_deps` of the `octopus_pro_f446` environment.
+The display is an **Elecrow CrowPanel Advanced 9" ESP32-P4** (1024x600) on its 24-pin header J7: link to the Octopus on USART2 (PD5 TX2 / PD6 RX2 header next to the USB-C socket), LightBurn pass-through on USART3 (WIFI socket), 5 V from a separate converter. The previous **ESP32-S3** (N16R8) with an **MKS TS35** uses the same plugin and still builds. Included as submodule in [`display/`](display/) and added to `lib_deps` of the `octopus_pro_f446` environment. A 3D-printable desk case for the 9" panel is in [`display/esp32p4/case`](https://github.com/Steppge/grblHAL-Plugin-Display/tree/main/esp32p4/case).
 
 ```c
 #define TFT_DISPLAY_ENABLE      0 // TS35 driven by the Octopus itself (see below)
-#define DISPLAY_LINK_ENABLE     1 // ESP32-S3 touch display on USART2
+#define DISPLAY_LINK_ENABLE     1 // ESP32 touch display (P4 or S3) on USART2
 ```
 
 - Main screen with state, position, feed, power and a map of the machine area: live tool path while the laser is on, and a **preview of the G-code file** loaded from the SD card (computed by the plugin on the Octopus while idle). Buttons change between idle (home, unlock, X0 Y0, Z0, hold, load/start) and job (feed and power overrides, hold/stop, resume).
 - Zoom view of the workpiece with STOP (feed hold, laser off, then ABORT).
 - Menu: Move, Probe Z, laser test pulse, SD card, settings editor (all `$` settings, with keypad), unlock.
+- Gamepad screen: button assignment, pairing the controller with the gamepad ESP32 and forgetting all controllers.
 - Errors of commands and SD jobs appear in a banner; after an SD job has stopped with an error the display offers the reset grblHAL needs before jogging again.
 - WiFi: firmware updates of the display over the air, and **LightBurn over WiFi** (TCP port 23 on the display, passed through to USART3 on the WIFI socket, which becomes the active grblHAL stream while connected).
 - Web interface: any browser on the network (phone, tablet, PC) shows the machine at `http://grblhal-display.local` with the map, the G-code preview and the main buttons; control is switched on at the display and needs the OTA password once.
