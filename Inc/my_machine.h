@@ -107,9 +107,9 @@
 //#define LB_CLUSTERS_ENABLE      1 // LaserBurn cluster support.
 //#define OPENPNP_ENABLE          1 // OpenPNP plugin. To be completed.
 //#define TRINAMIC_ENABLE      2130 // Trinamic TMC2130 stepper driver support.
-//#define TRINAMIC_ENABLE      5160 // Trinamic TMC5160 stepper driver support.
-#define TRINAMIC_ENABLE               2209
-#define TRINAMIC_R_SENSE              110
+#define TRINAMIC_ENABLE      5160 // Trinamic TMC5160 stepper driver support.
+//#define TRINAMIC_ENABLE               2209
+#define TRINAMIC_R_SENSE      75 // R sense resistance in milliohms, 2130 and 2209 default is 110, 5160 is 75.
 
 #define TMC_X_CURRENT                 1800
 #define TMC_Y_CURRENT                 1300
@@ -130,7 +130,7 @@
 //#define TRINAMIC_R_REF         12 // R ref resistance in kiloohms, used for 2240 - default value is 12.
 //#define TRINAMIC_I2C            1 // Trinamic I2C - SPI bridge interface.
 //#define TRINAMIC_DEV            1 // Development mode, adds a few M-codes to aid debugging. Do not enable in production code.
-#define TRINAMIC_UART_ENABLE    2
+//#define TRINAMIC_UART_ENABLE    2
 //#define FANS_ENABLE             1 // Enable fan control via M106/M107. Enables fans plugin.
 #define EEPROM_ENABLE           32 // Onboard AT24C32, 4 KiB I2C EEPROM.
 //#define EEPROM_IS_FRAM          1 // Uncomment when EEPROM is enabled and chip is FRAM, this to remove write delay.
