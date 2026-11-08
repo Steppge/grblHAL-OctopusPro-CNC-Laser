@@ -188,6 +188,9 @@ void SysTick_Handler(void)
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
+#if WATCHDOG_ENABLE
+  IWDG->KR = 0xAAAA;  // watchdog refresh, see watchdog.c
+#endif
   Driver_IncTick();
   /* USER CODE END SysTick_IRQn 1 */
 }

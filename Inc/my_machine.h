@@ -89,6 +89,7 @@
                                     // NOTE: Only fully compatible with F412 and F429 MCUs.
 //#define WEBUI_AUTH_ENABLE       1 // Enable ESP3D-WEBUI authentication.
 #define SDCARD_ENABLE           2 // Run gcode programs from SD card. Set to 2 to enable YModem upload.
+#define WATCHDOG_ENABLE         1 // Independent watchdog, 2 s: resets a frozen CPU (outputs off), reset cause with $I (Src/watchdog.c).
 //#define MPG_ENABLE              1 // Enable MPG interface. Requires a serial stream and means to switch between normal and MPG mode.
                                     // 1: Mode switching is by handshake pin.
                                     // 2: Mode switching is by the CMD_MPG_MODE_TOGGLE (0x8B) command character.
@@ -178,7 +179,7 @@
 //#define JOYSTICK_PORT_X         0 // analog aux input ports of the sticks, default 0, 1, 2
 #define GAMEPAD_ENABLE          1 // PS4/PS5/Xbox controller via ESP32 on the TFT header (USART1), see gamepad_plugin.c
 //#define GAMEPAD_STREAM          0 // serial stream instance for the ESP32, default 0 (Octopus Pro: TFT header)
-#define GAMEPAD_BAUD       921600 // via the ESP32-S3 bridge (Octopus-Bridge), default 115200
+#define GAMEPAD_BAUD       230400 // via the ESP32-S3 bridge (Octopus-Bridge); 921600 on USART1 froze the CPU during SD access, 460800 tested ok, 230400 for margin
 #define TFT_DISPLAY_ENABLE      0 // MKS TS35 on EXP1/EXP2 driven by the Octopus, see tft_display.c
 #define DISPLAY_LINK_ENABLE     1 // ESP32-S3 touch display on USART2 (PD5 TX2 / PD6 RX2 header next to USB-C), see display/display_link.c
 //#define DISPLAY_LINK_STREAM     1 // serial stream instance for the ESP32-S3, default 1 (Octopus Pro: USART2, 2 = USART3 on the WIFI socket)

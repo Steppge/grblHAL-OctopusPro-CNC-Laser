@@ -30,14 +30,24 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-/* use the default SD timout as defined in the platform BSP driver*/
-#if defined(SDMMC_DATATIMEOUT)
-#define SD_TIMEOUT SDMMC_DATATIMEOUT
-#elif defined(SD_DATATIMEOUT)
-#define SD_TIMEOUT SD_DATATIMEOUT
-#else
-#define SD_TIMEOUT 30 * 1000
-#endif
+/* SDMMC_DATATIMEOUT is 0xFFFFFFFF ms: a transfer cut short (FIFO underrun/overrun from interrupts, the
+   transfer is polled) would wait forever and hang the controller. 1 s is plenty for up to 128 sectors. */
+#define SD_TIMEOUT 1000
+#define SD_STATE_TIMEOUT 1000   /* ms, waiting for the card to be ready again after a transfer */
+
+
+/* Waits until the card is back in the transfer state, MSD_OK, or MSD_ERROR after SD_STATE_TIMEOUT */
+static uint8_t wait_ready (void)
+{
+  uint32_t start = HAL_GetTick();
+
+  while(BSP_SD_GetCardState() != MSD_OK)
+  {
+    if(HAL_GetTick() - start >= SD_STATE_TIMEOUT)
+      return MSD_ERROR;
+  }
+  return MSD_OK;
+}
 
 #define SD_DEFAULT_BLOCK_SIZE 512
 
@@ -153,10 +163,8 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
                        count, SD_TIMEOUT) == MSD_OK)
   {
     /* wait until the read operation is finished */
-    while(BSP_SD_GetCardState()!= MSD_OK)
-    {
-    }
-    res = RES_OK;
+    if(wait_ready() == MSD_OK)
+      res = RES_OK;
   }
 
   return res;
@@ -183,11 +191,9 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
                         (uint32_t)(sector),
                         count, SD_TIMEOUT) == MSD_OK)
   {
-	/* wait until the Write operation is finished */
-    while(BSP_SD_GetCardState() != MSD_OK)
-    {
-    }
-    res = RES_OK;
+    /* wait until the Write operation is finished */
+    if(wait_ready() == MSD_OK)
+      res = RES_OK;
   }
 
   return res;

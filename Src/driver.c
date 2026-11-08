@@ -2921,6 +2921,11 @@ bool driver_init (void)
     stream_connect(usbInit());
     system_register_commands(&boot_commands);
 
+#if WATCHDOG_ENABLE
+    extern void watchdog_init (void);
+    watchdog_init();
+#endif
+
   #if COPROC_PASSTHRU
 
     extern uint8_t _estack; /* Symbol defined in the linker script */

@@ -43,7 +43,7 @@ static SD_HandleTypeDef hsd = {
     .Init.ClockPowerSave = SDIO_CLOCK_POWER_SAVE_DISABLE,
     .Init.BusWide = SDIO_BUS_WIDE_1B,
     .Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE,
-    .Init.ClockDiv = 4
+    .Init.ClockDiv = 10     /* 48 MHz / (10 + 2) = 4 MHz: polled transfers, more time against FIFO under-/overrun from interrupts (was 4, 8 MHz) */
 };
 
 /**
