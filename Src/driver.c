@@ -57,6 +57,8 @@
 
 #if FLASH_ENABLE
 #include "flash.h"
+#elif BBRAM_ENABLE
+extern bool bbram_init (void);
 #endif
 
 #if QEI_ENABLE || SPINDLE_ENCODER_ENABLE
@@ -159,9 +161,6 @@ static input_signal_t inputpin[] = {
 #endif
 #ifdef W_HOME_PIN
     { .id = Input_HomeW,          .port = W_HOME_PORT,        .pin = W_HOME_PIN,          .group = PinGroup_Home },
-#endif
-#ifdef MOTOR_FAULT_PIN
-    { .id = Input_MotorFaultX,    .port = X_MOTOR_FAULT_PORT,  .pin = X_MOTOR_FAULT_PIN,  .group = PinGroup_Motor_Fault },
 #endif
 #ifdef SPINDLE_INDEX_PIN
     { .id = Input_SpindleIndex,   .port = SPINDLE_INDEX_PORT, .pin = SPINDLE_INDEX_PIN,   .group = PinGroup_SpindleIndex },
@@ -2804,7 +2803,7 @@ bool driver_init (void)
 #else
     hal.info = "STM32F401";
 #endif
-    hal.driver_version = "261006";
+    hal.driver_version = "261104";
     hal.driver_url = GRBL_URL "/STM32F4xx";
 #ifdef BOARD_NAME
     hal.board = BOARD_NAME;
@@ -2814,7 +2813,7 @@ bool driver_init (void)
 #endif
     hal.driver_setup = driver_setup;
     hal.f_mcu = HAL_RCC_GetHCLKFreq() / 1000000UL;
-    hal.f_step_timer = HAL_RCC_GetPCLK1Freq() * 2 / STEPPER_TIMER_DIV;
+    hal.f_step_timer = HAL_RCC_GetPCLK1Freq() * (LL_RCC_GetAPB1Prescaler() ? 2 : 1) / STEPPER_TIMER_DIV;
     hal.rx_buffer_size = RX_BUFFER_SIZE;
     hal.get_free_mem = get_free_mem;
     hal.delay_ms = &driver_delay;
@@ -2953,6 +2952,9 @@ bool driver_init (void)
 #if EEPROM_ENABLE
     if(!i2c_eeprom_init())
         task_run_on_startup(task_raise_alarm, (void *)Alarm_NVS_Failed);
+#elif BBRAM_ENABLE
+    if(!bbram_init())
+        task_run_on_startup(task_raise_alarm, (void *)Alarm_NVS_Failed);
 #elif FLASH_ENABLE
     hal.nvs.type = NVS_Flash;
     hal.nvs.size_max = 1024 * 16;
@@ -2984,8 +2986,7 @@ bool driver_init (void)
     hal.coolant_cap.bits = COOLANT_ENABLE;
     hal.driver_cap.software_debounce = On;
     hal.driver_cap.step_pulse_delay = On;
-    hal.driver_cap.control_pull_up = On;
-    hal.driver_cap.limits_pull_up = On;
+    hal.driver_cap.pullup_enabled = PULLUPS_ENABLE;
 
     static pin_group_pins_t aux_digital_in = {0}, aux_digital_out = {0},
                             aux_analog_in = {0}, aux_analog_out = {0};
