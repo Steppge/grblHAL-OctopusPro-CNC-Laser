@@ -1,6 +1,7 @@
 # Gruppe „grblHAL / CNC“ – Übersicht der Sitzungen
 
-Stand: 11.11.2026, ohne die PC-Deck-Sitzungen. Erstellt aus den Sitzungsverläufen, den Notizen und der Git-Historie.
+Stand: 13.11.2026, ohne die PC-Deck-Sitzungen. Erstellt aus den Sitzungsverläufen, den Notizen und der Git-Historie.
+Die Sitzungen 1 bis 4 sind seit dem 12.11. archiviert, weitergearbeitet wird in Sitzung 5.
 
 ## Die Maschine und die Projekte
 
@@ -9,7 +10,8 @@ Stand: 11.11.2026, ohne die PC-Deck-Sitzungen. Erstellt aus den Sitzungsverläuf
 | Octopus-Firmware (grblHAL, BTT Octopus Pro, F446) | `F:\VisualCode\STM32F4xx-joy` | Fork `Steppge/grblHAL-OctopusPro-CNC-Laser`, Branch `octopus-pro-joy` (Remote `fork`; `origin` = grblHAL upstream) |
 | Display-Plugin + ESP32-Display (S3/TS35 und P4 9") | `F:\VisualCode\grblHAL-Plugin-Display` | `Steppge/grblHAL-Plugin-Display`, Submodul `display` |
 | Gamepad-Plugin + D1-Mini-Empfänger | `grblHAL-Plugin-Gamepad` | Submodul `gamepad` |
-| Octopus-Bridge (ESP32-S3 an der Maschine) | `F:\VisualCode\Octopus-Bridge` | eigenes lokales Repo |
+| Octopus-Bridge (ESP32-S3 an der Maschine) | `F:\VisualCode\Octopus-Bridge` | `Steppge/grblHAL-Octopus-Bridge` (öffentlich seit 13.11.) |
+| Marlin (alte Firmware, nur noch gepflegt) | `F:\VisualCode\Marlin-neu` | Fork `Steppge/Marlin-OctopusPro-CNC-Laser`, Branch `laser-config` |
 
 Maschine: Laser/CNC, Arbeitsbereich ca. 287 × 232 mm, X/Y 4500 mm/min bei 500 mm/s², Z 1500 mm/min, TMC5160 über SPI, Laser an FAN0. Details in `Maschineneinstellungen.md`.
 
@@ -43,7 +45,6 @@ Funkdisplay und Bridge, außerdem die P4-Display-Firmware.
 
 **Offen**
 - Die Schwellen oben am vollen Akku prüfen (Sprung auf 100 % und auf Grün).
-- Commits sind nicht gepusht.
 
 ## 3. Nebensitzungen von 2.
 Firmware-Stand am Octopus geprüft (08.11.): grblHAL 1.1f.20261008, Treiber 261006, Plugins Watchdog 1.00, Trinamic 0.33, Gamepad 1.3, Display-Link 1.1, SD-Karte 1.29. Wunsch für das Display: Akkuanzeige im Ruhebild mit Farbwechsel, wenn der Akku voll ist. Umgesetzt wurde das über die Akku-Schwellen in Sitzung 2.
@@ -55,30 +56,43 @@ Firmware-Stand am Octopus geprüft (08.11.): grblHAL 1.1f.20261008, Treiber 2610
 - Fliesen-Test mit schwarzer Folie: 66 % bei 3000 mm/min (Alternative 54 % bei 2250 mm/min), Intervall 0,1 mm, Overscan 3–4 mm bei 3000 mm/min.
 - Mandala als Bild im Schwellwert-Modus statt als Vektor, deshalb ist kein Linientest nötig.
 
+- Nullpunkt hinten rechts, in LightBurn Ursprung oben rechts (per Jog-Test bestätigt, siehe `Maschineneinstellungen.md`).
+
 **Offen**
 - Mitlesen über die Weboberfläche des Displays während eines Jobs wurde angeboten, aber nicht umgesetzt.
-- Die Nullpunkt-Ecke der Maschine ist noch unbekannt.
 
-## 5. Claude.md review (diese Sitzung)
-Sitzung in die Gruppe grblHAL / CNC einsortiert und diese Übersicht erstellt.
+## 5. Claude.md review (diese Sitzung, 11.–13.11.)
+**Erledigt**
+- Diese Übersicht erstellt, die Sitzungen 1 bis 4 archiviert.
+- Big-Deck: Kacheln am P4 verschieben (halten, ziehen, `MOVE`), Deck-FW 40.
+- P4-Display für Nachbauer: `esp32p4/src/display_config.h` mit `BIGDECK` (Standard 0), `CLOCK`, `ENCODER`, `BATTERY`,
+  `GAMEPAD` und den J7-Pins; eigene Werte in `my_display_config.h` (nicht im Repo, bei mir `BIGDECK 1`).
+- Konsolenbefehl `shot` und `esp32p4/tools/shot.py`: Bildschirmbilder über die Konsole; fünf Bilder in der README.
+- README des Display-Plugins: Abschnitt CrowPanel 9" ESP32-P4 (Teile, Bridge, Einstellungen, Flashen, Gehäuse).
+- PC-Taste über der Vollbild-Karte ausgeblendet; Lizenzkopf des Display-Plugins korrigiert.
+- Octopus-Bridge veröffentlicht (ohne `wifitest`/`p4usbtest`, Heim-WLAN-Name aus der Historie entfernt).
+- Gamepad 1.3 und alle Display-Commits gepusht, Marlin-Fork auf `bugfix-2.1.x` gebracht (ein Konflikt in den Octopus-Pins).
+- grblHAL-Sync vom 12.11. eingebunden, Submodule nachgezogen: Octopus läuft mit grblHAL 1.1f.20261107,
+  Treiber 261104, SD-Karte 1.30. Lasertest ok.
+- Der P4 hängt zurzeit an COM30 (CH340K), nicht an COM9.
 
 ---
 
 ## Offene Punkte gesamt
 1. Akku-Schwellen am vollen Akku prüfen (Display P4).
-2. Commits pushen: Octopus (`fork`), Display-Plugin, Gamepad. Die Octopus-Bridge hat kein Remote.
-3. Nicht eingecheckt im Octopus-Repo: `Maschineneinstellungen.md`, `firmware.bin`, `tools/laser_test.*`, `tools/motor_test_saved.json`.
-4. Geplant, noch nicht gebaut:
-   - Voraussichtliches Jobende in der Job-Zeile für SD-Jobs.
+2. Nicht eingecheckt: im Octopus-Repo `firmware.bin`, `tools/laser_test.*`, `tools/motor_test_saved.json`;
+   im Display-Plugin die Knopf-Dateien in `esp32p4/case/` (`knopf50`, Vorschau-SVGs).
+3. Geplant, noch nicht gebaut:
    - VFD mit 0–10 V an FAN3 als zweite PWM-Spindel, Enable an FAN4 (pausiert seit 08.11.).
+     Der neue grblHAL-Stand (20261107) unterstützt geklonte PWM-Spindeln besser.
    - LightBurn über WLAN durch die Bridge (USART3), vorerst bleibt LightBurn an USB.
    - Kamera für LightBurn und das Display.
-5. Nullpunkt-Ecke der Maschine festlegen.
+   - `display_config.h` für das S3-Display (`DISPLAY_TYPE` für MKS TS35 / BTT TFT35).
 
 ## Wichtige Ports
 | Gerät | Port |
 |---|---|
 | Octopus (USB) | COM3 |
-| P4-Display (CH340, Konsole/Flash) | COM9 |
+| P4-Display (CH340K, Konsole/Flash) | COM30 (früher COM9) |
 | D1 Mini (Gamepad) | COM10 |
 | Octopus-Bridge S3 (CH343) | COM19 |
