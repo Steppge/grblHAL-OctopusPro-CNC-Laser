@@ -88,6 +88,12 @@ Firmware-Stand am Octopus geprüft (08.11.): grblHAL 1.1f.20261008, Treiber 2610
   gezeichnet, weil `show()` und Farb-Setter auch ohne Änderung neu zeichnen ließen. Jetzt etwa 1 000 Pixel/s;
   die USB-Task wartet ohne Daten 2–4 ms und prüft TCP alle 50 ms – `9727cee`. `status` zeigt „redrawn px/s“.
   Im Big-Deck-Layout 6 × 4 werden die Icons nicht gezoomt (erst ab 3 Zeilen).
+- 14.11.: Maschinen-Ansicht vor dem Homing zeigt die Vorschau absichtlich nicht (so gewollt), dafür der gelbe
+  Hinweis „Home first to see the job in the machine area“ – `982c2f3`.
+- 14.11.: Hauptbildschirm: Positionskachel kleiner, Jog-Kachel größer. Tippen auf die Jog-Kachel öffnet „Move“,
+  Tippen auf die Position öffnet das neue Fenster „Go to“: Ziel je Achse (nur eingetippte Achsen fahren),
+  Workpiece (G54) oder Machine, Reihenfolge Z Y X / Z X Y / X Y Z / Y X Z / Z XY / XY Z / XYZ, Eilgang mit OK
+  nur im Idle. Bei Machine bekommt Z automatisch ein Minus (0 = oben) – `3db6e10`.
 
 ---
 
