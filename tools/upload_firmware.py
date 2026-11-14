@@ -8,6 +8,8 @@ After a reboot the BTT bootloader flashes firmware.bin and renames it to FIRMWAR
   python tools/upload_firmware.py               upload only
   python tools/upload_firmware.py --reboot      upload, then reboot to flash it
   python tools/upload_firmware.py --reboot-only reboot to flash a previously uploaded file
+  python tools/upload_firmware.py --bridge      upload the Octopus-Bridge firmware as bridge.bin, then
+                                                $BRIDGE sends it over the display link (bridge 0.4 or newer)
 
 The machine must be idle and no other program (LightBurn) may have the port open.
 Requires pyserial (pip install pyserial).
@@ -23,6 +25,7 @@ import serial.tools.list_ports
 
 USB_VID, USB_PID = 0x0483, 0x5740   # STM32 virtual COM port
 FIRMWARE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.pio', 'build', 'octopus_pro_f446', 'firmware.bin')
+BRIDGE_FIRMWARE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'Octopus-Bridge', '.pio', 'build', 'bridge', 'firmware.bin')
 TARGET = 'firmware.bin'
 
 SOH, STX, EOT, ACK, NAK, CAN, CRC = 0x01, 0x02, 0x04, 0x06, 0x15, 0x18, 0x43
@@ -153,6 +156,28 @@ def reboot(ser):
     close_port(ser)
 
 
+def bridge_update(ser, timeout=120):
+    """$BRIDGE: the display link plugin sends bridge.bin to the bridge, its [MSG:Bridge update: ...] lines are shown."""
+    print('Updating the Octopus-Bridge over the display link ...')
+    ser.reset_input_buffer()
+    ser.write(b'$BRIDGE\n')
+    end = time.time() + timeout
+    while time.time() < end:
+        line = ser.readline().decode(errors='replace').strip()
+        if not line:
+            continue
+        if line.startswith('error'):
+            sys.exit(f'$BRIDGE refused: {line} (8 = not idle, 64 = no SD card, 84 = bridge.bin missing)')
+        if 'Bridge update' in line:
+            text = line.split('Bridge update:', 1)[-1].rstrip(']').strip()
+            print('  ' + text)
+            if text.startswith('done'):
+                return
+            if not text.endswith('%') and not text.startswith('started'):
+                sys.exit('Bridge update failed.')
+    sys.exit('No end of the bridge update within %d s.' % timeout)
+
+
 def close_port(ser):
     # Drop DTR before closing: grblHAL treats the USB port as connected while DTR is set and
     # waits for the host to read its replies, commands from other streams then stall.
@@ -169,7 +194,13 @@ def main():
     ap.add_argument('--file', default=FIRMWARE, help='firmware file (default: PlatformIO build output)')
     ap.add_argument('--target', default=TARGET, help='file name on the card (default: firmware.bin), e.g. for G-code files')
     ap.add_argument('--alarm-ok', action='store_true', help='also upload in alarm state (nothing moves, only the SD card is written)')
+    ap.add_argument('--bridge', action='store_true', help='Octopus-Bridge: upload its firmware as bridge.bin and send it with $BRIDGE')
     args = ap.parse_args()
+    if args.bridge:
+        if args.file == FIRMWARE:
+            args.file = BRIDGE_FIRMWARE
+        args.target = 'bridge.bin'
+        args.alarm_ok = True        # nothing moves
     TARGET = args.target.lower()
 
     ser = open_port()
@@ -192,7 +223,10 @@ def main():
         command(ser, '$FM', 5)  # mount the SD card (not mounted automatically)
         upload(ser, args.file)
 
-    if args.reboot or args.reboot_only:
+    if args.bridge:
+        bridge_update(ser)
+        close_port(ser)
+    elif args.reboot or args.reboot_only:
         reboot(ser)
     else:
         close_port(ser)
