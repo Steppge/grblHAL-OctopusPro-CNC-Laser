@@ -82,13 +82,21 @@ Firmware-Stand am Octopus geprüft (08.11.): grblHAL 1.1f.20261008, Treiber 2610
   51 MHz, nach einem Unterlauf automatisch neu ausrichten (Panel-Reset wie beim Start, Bild bleibt, ca. 0,2 s dunkel).
   Konsole: `resync`, `status` zeigt Unterläufe und Neuausrichtungen.
 - Upstream-Stand geprüft (14.11.): nur SNTP, Modbus RTU, FatFs R0.15 im SD-Plugin; nichts übernommen.
+- 14.11.: Uhr im gedimmten Bild mit eigener 120-px-Schrift statt 2,5-fach vergrößerter 48-px-Schrift
+  (`esp32p4/tools/clockfont.py`, `font_clock_120.c`, Montserrat unter OFL) – `84ed152`.
+- 14.11.: Code-Durchsicht des P4. Hauptfund: `ui_update()` (10/s) hat im Stillstand rund 1,1 Mio. Pixel/s neu
+  gezeichnet, weil `show()` und Farb-Setter auch ohne Änderung neu zeichnen ließen. Jetzt etwa 1 000 Pixel/s;
+  die USB-Task wartet ohne Daten 2–4 ms und prüft TCP alle 50 ms – `9727cee`. `status` zeigt „redrawn px/s“.
+  Im Big-Deck-Layout 6 × 4 werden die Icons nicht gezoomt (erst ab 3 Zeilen).
 
 ---
 
 ## Offene Punkte gesamt
 1. Akku-Schwellen am vollen Akku prüfen (Display P4).
-2. Beobachten, ob das P4-Bild gerade bleibt; bei einem echten Unterlauf muss die automatische Neuausrichtung
-   greifen (bisher nur von Hand mit `resync` getestet). Kontrolle mit `status` auf COM30.
+2. Beobachten, ob das P4-Bild gerade bleibt (seit der Durchsicht kaum noch Zeichenlast); bei einem echten
+   Unterlauf muss die automatische Neuausrichtung greifen (bisher nur von Hand mit `resync` getestet).
+   Kontrolle mit `status` auf COM30: Unterläufe und „redrawn px/s“.
+   Falls das Big-Deck auf 3 oder weniger Zeilen umgestellt wird: Icons beim Empfang vorab vergrößern.
 3. Nicht eingecheckt im Octopus-Repo: `firmware.bin`, `tools/laser_test.*`, `tools/motor_test_saved.json`.
 4. Geplant, noch nicht gebaut:
    - VFD mit 0–10 V an FAN3 als zweite PWM-Spindel, Enable an FAN4 (pausiert seit 08.11.).
