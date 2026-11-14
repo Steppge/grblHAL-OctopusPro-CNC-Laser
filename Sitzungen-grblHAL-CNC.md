@@ -1,6 +1,6 @@
 # Gruppe „grblHAL / CNC“ – Übersicht der Sitzungen
 
-Stand: 13.11.2026, ohne die PC-Deck-Sitzungen. Erstellt aus den Sitzungsverläufen, den Notizen und der Git-Historie.
+Stand: 14.11.2026, ohne die PC-Deck-Sitzungen. Erstellt aus den Sitzungsverläufen, den Notizen und der Git-Historie.
 Die Sitzungen 1 bis 4 sind seit dem 12.11. archiviert, weitergearbeitet wird in Sitzung 5.
 
 ## Die Maschine und die Projekte
@@ -61,7 +61,7 @@ Firmware-Stand am Octopus geprüft (08.11.): grblHAL 1.1f.20261008, Treiber 2610
 **Offen**
 - Mitlesen über die Weboberfläche des Displays während eines Jobs wurde angeboten, aber nicht umgesetzt.
 
-## 5. Claude.md review (diese Sitzung, 11.–13.11.)
+## 5. Claude.md review (diese Sitzung, 11.–14.11.)
 **Erledigt**
 - Diese Übersicht erstellt, die Sitzungen 1 bis 4 archiviert.
 - Big-Deck: Kacheln am P4 verschieben (halten, ziehen, `MOVE`), Deck-FW 40.
@@ -75,14 +75,22 @@ Firmware-Stand am Octopus geprüft (08.11.): grblHAL 1.1f.20261008, Treiber 2610
 - grblHAL-Sync vom 12.11. eingebunden, Submodule nachgezogen: Octopus läuft mit grblHAL 1.1f.20261107,
   Treiber 261104, SD-Karte 1.30. Lasertest ok.
 - Der P4 hängt zurzeit an COM30 (CH340K), nicht an COM9.
+- Knopf-Dateien (`knopf50`) im Display-Plugin eingecheckt; Maschineneinstellungen und diese Übersicht im Octopus-Repo.
+- PC-Deck-Doku-Sitzung informiert: `BIGDECK` ist standardmäßig 0, `MOVE` läuft auf dem Big-Deck, Port COM30.
+- 14.11.: Bild des P4 war nach etwa 10 min seitlich verschoben. Ursache: Unterlauf der Bildausgabe aus dem PSRAM
+  (`lcd.dsi: ... underrun happens`). Behoben in `2835a79`: Zeichenstreifen im internen RAM, Pixeltakt 46 statt
+  51 MHz, nach einem Unterlauf automatisch neu ausrichten (Panel-Reset wie beim Start, Bild bleibt, ca. 0,2 s dunkel).
+  Konsole: `resync`, `status` zeigt Unterläufe und Neuausrichtungen.
+- Upstream-Stand geprüft (14.11.): nur SNTP, Modbus RTU, FatFs R0.15 im SD-Plugin; nichts übernommen.
 
 ---
 
 ## Offene Punkte gesamt
 1. Akku-Schwellen am vollen Akku prüfen (Display P4).
-2. Nicht eingecheckt: im Octopus-Repo `firmware.bin`, `tools/laser_test.*`, `tools/motor_test_saved.json`;
-   im Display-Plugin die Knopf-Dateien in `esp32p4/case/` (`knopf50`, Vorschau-SVGs).
-3. Geplant, noch nicht gebaut:
+2. Beobachten, ob das P4-Bild gerade bleibt; bei einem echten Unterlauf muss die automatische Neuausrichtung
+   greifen (bisher nur von Hand mit `resync` getestet). Kontrolle mit `status` auf COM30.
+3. Nicht eingecheckt im Octopus-Repo: `firmware.bin`, `tools/laser_test.*`, `tools/motor_test_saved.json`.
+4. Geplant, noch nicht gebaut:
    - VFD mit 0–10 V an FAN3 als zweite PWM-Spindel, Enable an FAN4 (pausiert seit 08.11.).
      Der neue grblHAL-Stand (20261107) unterstützt geklonte PWM-Spindeln besser.
    - LightBurn über WLAN durch die Bridge (USART3), vorerst bleibt LightBurn an USB.
