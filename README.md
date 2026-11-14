@@ -178,6 +178,10 @@ Overrides other than 100 % are shown at the end of the info line, e.g. `logo.nc 
 *Rendered previews: PC simulation of the display drawing code with the firmware's font data and example values, shown at 2x size.*
 
 ## Build and flash
+With the CrowPanel ESP32-P4 display, the Octopus-Bridge and the gamepad receiver: all four firmwares, their order and
+the updates without cables are in [FLASHING.md](https://github.com/Steppge/grblHAL-Plugin-Display/blob/main/docs/FLASHING.md).
+The Octopus alone:
+
 1. Install VS Code with the PlatformIO extension.
 2. Clone **with submodules** ("Download ZIP" on GitHub does not include them, the build fails):
    ```
@@ -190,7 +194,7 @@ Overrides other than 100 % are shown at the end of the info line, e.g. `logo.nc 
    Also check the other options in `my_machine.h` (motor currents, ganged Y axis, laser, ...). If you don't have the gamepad/joystick, display and controller fan, remove `-D ADD_MY_PLUGIN=1` from the `octopus_pro_f446` environment in `platformio.ini`.
 4. Build the environment **`octopus_pro_f446`** (linker script `STM32F446ZETX_BL32K_NONVS_FLASH.ld`, 32K bootloader offset).
 5. Copy `.pio/build/octopus_pro_f446/firmware.bin` as `firmware.bin` to the SD card and power up the board.
-   Or over USB (machine idle, no sender connected, needs `SDCARD_ENABLE 2` and pyserial): `python tools/upload_firmware.py --reboot` uploads the file to the SD card in the board with YModem and reboots, the bootloader then flashes it. `--alarm-ok` also uploads in alarm state (e.g. homing required after power-up, nothing moves), `--target <name>` copies other files, e.g. G-code: `python tools/upload_firmware.py --file job.nc --target job.nc`.
+   Or over USB (machine idle, no sender connected, needs `SDCARD_ENABLE 2` and pyserial): `python tools/upload_firmware.py --reboot` uploads the file to the SD card in the board with YModem and reboots, the bootloader then flashes it. `--alarm-ok` also uploads in alarm state (e.g. homing required after power-up, nothing moves), `--target <name>` copies other files, e.g. G-code: `python tools/upload_firmware.py --file job.nc --target job.nc`. `--bridge` updates the Octopus-Bridge through the display link (copies its firmware as `bridge.bin` to the SD card and runs `$BRIDGE`).
 
 ## Troubleshooting: grblHAL on the BTT Octopus Pro
 
