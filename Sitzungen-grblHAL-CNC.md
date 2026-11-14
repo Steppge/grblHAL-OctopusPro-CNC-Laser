@@ -94,6 +94,12 @@ Firmware-Stand am Octopus geprüft (08.11.): grblHAL 1.1f.20261008, Treiber 2610
   Tippen auf die Position öffnet das neue Fenster „Go to“: Ziel je Achse (nur eingetippte Achsen fahren),
   Workpiece (G54) oder Machine, Reihenfolge Z Y X / Z X Y / X Y Z / Y X Z / Z XY / XY Z / XYZ, Eilgang mit OK
   nur im Idle. Bei Machine bekommt Z automatisch ein Minus (0 = oben) – `3db6e10`.
+- 14.11.: Code-Review-Fixes, Bridge 0.4 mit Update über die Octopus-SD (`upload_firmware.py --bridge`, `$BRIDGE`),
+  Anleitung `docs/FLASHING.md` im Display-Repo für Nachbauer.
+- 14.11.: Gamepad-Empfänger (D1) per `gamepad.bin` auf der P4-Karte: lief erst nicht, Ursache ein vorzeichenloser
+  Zeitvergleich im Sketch (sofort „timeout“, `FD,0`). Sketch 1.6 (`b9c4335`): Fix, Grund im `FD,0,<why>`,
+  Block-Wiederholung; Display `12eb88e`. Test eingebaut: 800 KB in 15,5 s, 0 Wiederholungen.
+  1.4/1.5 müssen einmal per USB geflasht werden.
 
 ---
 
@@ -103,7 +109,8 @@ Firmware-Stand am Octopus geprüft (08.11.): grblHAL 1.1f.20261008, Treiber 2610
    Unterlauf muss die automatische Neuausrichtung greifen (bisher nur von Hand mit `resync` getestet).
    Kontrolle mit `status` auf COM30: Unterläufe und „redrawn px/s“.
    Falls das Big-Deck auf 3 oder weniger Zeilen umgestellt wird: Icons beim Empfang vorab vergrößern.
-3. Nicht eingecheckt im Octopus-Repo: `firmware.bin`, `tools/laser_test.*`, `tools/motor_test_saved.json`.
+3. Nur lokal (in `.git/info/exclude`): `firmware.bin`, `tools/laser_test.nc`, `tools/motor_test_saved.json`,
+   `tools/tds_live.py` (Oszi, mit Heim-IP). `tools/laser_test.py` ist eingecheckt.
 4. Geplant, noch nicht gebaut:
    - VFD mit 0–10 V an FAN3 als zweite PWM-Spindel, Enable an FAN4 (pausiert seit 08.11.).
      Der neue grblHAL-Stand (20261107) unterstützt geklonte PWM-Spindeln besser.
