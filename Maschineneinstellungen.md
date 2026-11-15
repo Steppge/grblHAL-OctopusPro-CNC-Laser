@@ -1,6 +1,6 @@
 # Maschineneinstellungen – CNC/Laser mit BTT Octopus Pro (grblHAL)
 
-Stand: 01.11.2026. Werte aus dieser Sitzung (ausgelesen mit `$$` bzw. selbst eingestellt), nicht frisch
+Stand: 01.11.2026, Motoren und Treiber 15.11.2026. Werte aus dieser Sitzung (ausgelesen mit `$$` bzw. selbst eingestellt), nicht frisch
 vom Board gelesen. Vor dem Einrichten von LightBurn einmal `$$` lesen und vergleichen.
 
 ## Hardware
@@ -10,8 +10,8 @@ vom Board gelesen. Vor dem Einrichten von LightBurn einmal `$$` lesen und vergle
 | Steuerung | BTT Octopus Pro v1.0 (STM32F446), grblHAL (Fork Steppge/grblHAL-OctopusPro-CNC-Laser, Branch `octopus-pro-joy`) |
 | Treiber | 4× BTT TMC5160T Pro V1.0 über SPI (R sense 75 mΩ), SpreadCycle, 16 Mikroschritte |
 | Motorspannung | 48–50 V (Labornetzteil, max. 4 A) an MOTOR_POWER; Board 24 V |
-| Motoren X, Y, Y2 | Nidec Servo KH56KM2-951 (2,0 A, 0,93 Nm, 3,19 mH) |
-| Motor Z | StepperOnline 17HE19-2004S (2,0 A, ca. 0,55 Nm) |
+| Motoren X, Y, Y2 | Nidec Servo KH56KM2-951 (NEMA 23, 2,0 A, 0,93 Nm, 1,32 Ω, 3,19 mH, 2,4 V; Datenblatt `OneDrive\Dokumente\KH56KM2.pdf`) |
+| Motor Z | StepperOnline 17HE19-2004S (NEMA 17, 2,0 A, ca. 0,55 Nm; R/L ungeprüft, etwa 1,4 Ω / 3 mH) |
 | Y | gekoppelt (Y + Y2) mit Auto-Squaring, zwei Schalter |
 | Laser | LaserTree LT-80W-AA-PRO, 24-V-Version, 10 W optisch, PWM 0–5 kHz |
 | Bedienung | CrowPanel 9" ESP32-P4 Display (USART2), PS4-Gamepad über D1 Mini ESP32 (USART1) |
@@ -26,12 +26,24 @@ vom Board gelesen. Vor dem Einrichten von LightBurn einmal `$$` lesen und vergle
 | Beschleunigung (`$120–122`) | **500 mm/s²** | **500 mm/s²** | **250 mm/s²** |
 | Verfahrweg (`$130–132`) | 290 mm | 235 mm | 212 mm |
 | Arbeitsbereich nach Referenzfahrt | 0 … 287 | 0 … 232 | −209 … 0 |
-| Motorstrom (`$140–142`) | 1600 mA (vorher 1800, X-Motor ca. 55 °C) | 1300 mA (Y und Y2) | 1400 mA |
+| Motorstrom (`$140–142`) | 1600 mA (vorher 1800, X-Motor ca. 55 °C; nicht weiter senken) | 1300 mA (Y und Y2) | 1400 mA |
 | Mikroschritte (`$150–152`) | 16 | 16 | 16 |
 
 Getestet ohne Schrittverlust (24.10.2026, Messung am Referenzschalter): X bis 4500 mm/min bei 700 mm/s²
 (ab 700 hörbar) und 6500 mm/min bei 160 mm/s²; Y bis 4500 bei 500 mm/s² und 7000 bei 160 mm/s²;
 Z bis 2000 bei 90 mm/s² und 1500 bei 250 mm/s². X bei 6000 mm/min mit 400 mm/s²: Schrittverlust.
+
+## Motoren und Treiber (TMC5160, 48 V)
+
+- SpreadCycle auf allen Achsen (`TMC_x_STEALTHCHOP 0`), Haltestrom 50 %.
+- Chopper mit den Standardwerten aus `trinamic/tmc5160.h`: toff 5, tbl 1, hstrt 3, hend 5 (Summe 8). Überschlag
+  nach Trinamic-Datenblatt für 48 V und 3,19 mH: die Hysterese passt etwa, viel ist am Chopper nicht zu holen.
+- Ändern ohne Neubau: `M919 X O<toff> P<hend> S<hstrt>` (nicht gespeichert, `M919` allein zeigt die Werte).
+  Dauerhaft: `TRINAMIC_EXTENDED_SETTINGS 1` in `my_machine.h`, dann `$651–$657` (für alle Achsen gemeinsam).
+  Marlins `CHOPPER_DEFAULT_24V/48V` gibt es in grblHAL nicht.
+- X-Motor wird beim Fahren heiß (seit 48 V mehr Eisenverluste): bei 1,6 A etwa 6,8 W Kupferverlust, unter dem
+  Nennstrom. Lösung: **Aluminium-Kühlkörper NEMA 23** mit Wärmeleitpad (bestellen, 15.11.2026), danach
+  10 min fahren und die Gehäusetemperatur messen (bis etwa 80 °C unkritisch). Lüfter mit Halter als nächste Stufe.
 
 ## Laser / Spindel
 
@@ -81,4 +93,4 @@ Z bis 2000 bei 90 mm/s² und 1500 bei 250 mm/s². X bei 6000 mm/min mit 400 mm/s
   bis ein Programm den Port wieder öffnet oder das Board neu startet (LightBurn trennt sauber).
 - Die TMC5160 brauchen ihre 48 V vor oder gleichzeitig mit den 24 V des Boards; 48 V nachträglich
   zugeschaltet: danach Octopus neu starten.
-- Gamepad (Plugin 1.3): Joggen, Home, X0Y0 und Z0 nur mit Freigabe (Options); im Alarm nur Home.
+- Gamepad (Plugin 1.4, Empfänger 1.6): Joggen, Home, X0Y0 und Z0 nur mit Freigabe (Options); im Alarm nur Home.
